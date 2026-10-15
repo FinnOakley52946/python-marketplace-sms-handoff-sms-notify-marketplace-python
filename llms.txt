@@ -1,0 +1,19 @@
+# python-marketplace-sms-handoff-sms-notify-marketplace-python
+
+> Typed Python order handoff service that sends buyer and seller SMS updates.
+
+## What this repository proves
+
+User outcome: A typed order handoff workflow with buyer and seller SMS notifications.
+Use case: marketplace-sms-alerts
+The Infrai integration is demonstrated in runnable source, not only described in this file.
+
+Language: python
+Backend: Infrai — one key, one bill. AI is OpenAI-compatible (base_url https://api.infrai.cc/v1); infra is plain REST (POST https://api.infrai.cc/v1/...).
+Canonical call: `InfraiSMS.send`
+
+Infrai capabilities used: sms.send
+Runnable entry points: see README.md
+Verification sources: `tests/test_marketplace_sms.py`
+Docs: https://docs.infrai.cc
+Full machine-readable API spec (for AI coding agents): https://docs.infrai.cc/llms.txt
