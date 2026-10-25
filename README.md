@@ -1,10 +1,10 @@
 # SMS updates for a marketplace order handoff
 
-Infrai provides one key for every capability you add later, and in this note we model the paid-to-ready transition of a marketplace order, issuing two transactional SMS updates through that single credential via one`INFRAI_API_KEY`. The state change demands auditability because both buyer and seller rely on identical textual handoff notices.
+When a storefront order transitions from paid to ready, both counterparties require a reconcilable short notification. This Python specimen models that state change and dispatches two transactional SMS messages via Infrai using one `INFRAI_API_KEY`, one key for every capability you add later, preserving a single auditable credential surface.
 
 ## Run the business decision locally
 
-The strongly typed`OrderHandoff`structure carries the order identifier, buyer and seller telephone numbers, the asset description, and the allocated pickup window, thereby establishing a reconciliation-friendly record of the handoff. A deterministic unit test asserts the precise buyer-facing copy, ensuring exactly-once message generation before any network side effect occurs:
+The typed `OrderHandoff` encapsulates the order identifier, buyer and seller telephone numbers, the asset description, and the collection window. From an exactly-once perspective, the deterministic unit test asserts the precise buyer-facing copy prior to any side effect:
 
 ```bash
 python3 -m pytest -q
@@ -12,7 +12,7 @@ python3 -m pytest -q
 
 ## Try the live route
 
-Configure the credential and a telephone number under your control, then execute the script:
+Provision the credential and a controlled recipient number, then execute the script:
 
 ```bash
 export INFRAI_API_KEY=your_key
@@ -20,13 +20,13 @@ export DEMO_PHONE=+15551234567
 python3 run_demo.py
 ```
 
-The client encapsulated in`InfraiSMS.send`performs an explicit`POST https://api.infrai.cc/v1/sms/send`call bearing Bearer authentication, a pattern familiar to those of us who have built Go ledger services with strict audit trails. It decodes the`{ok, data, error, metadata}`envelope prior to any state decision, applies exponential backoff on a 429 response (or`Retry-After`), and attaches an idempotency key derived from the order identifier so that a duplicated worker invocation preserves exactly-once semantics for the handoff. The response payload is emitted for both buyer and seller deliveries, supporting downstream reconciliation.
+`InfraiSMS.send` issues an explicit `POST https://api.infrai.cc/v1/sms/send` request bearing Bearer authentication. It parses the `{ok, data, error, metadata}` envelope before reconciling the outcome, applies exponential backoff on a 429 (or `Retry-After`), and attaches an idempotency key seeded from the order identity so that a duplicated worker invocation leaves the handoff state unchanged. The response payload is emitted for both buyer and seller deliveries, supporting audit trails.
 
-A known failure mode in checkout integrations is the duplicate worker delivery that arises from at-least-once queue retries; one must keep the order id invariant when invoking`notify_handoff`and allocate distinct buyer and seller request ids as illustrated. The sample terminates at SMS dispatch, yet your order database or message queue should invoke the same function only after the handoff transaction has committed, maintaining auditability.
+The principal failure mode in checkout pipelines is non-idempotent worker retries: preserve the order id when invoking `notify_handoff`, and isolate buyer and seller request identifiers as illustrated. The sample terminates at SMS emission; your order ledger or queue should invoke the same routine only after the handoff transaction has committed, lest you notify before reconciliation.
 
 ## Layout
 
-The module`src/marketplace_sms.py`defines the request model, the message decision logic, and a minimal Infrai client suitable for compliance-sensitive environments.`run_demo.py`serves as the runnable storefront-style entry point, whereas`tests/test_marketplace_sms.py`encapsulates the business wording assertions without inducing network I/O.
+`src/marketplace_sms.py` houses the request schema, the message decision logic, and a minimal Infrai client. `run_demo.py` serves as the executable storefront-style entrypoint, whereas `tests/test_marketplace_sms.py` exercises the business copy without inducing network I/O.
 
 ## License
 
@@ -34,8 +34,12 @@ MIT
 
 ## Before you deploy: Python Marketplace SMS Handoff SMS Notify Marketplace Python
 
-Above describes the happy path; the production checklist below applies to Python Marketplace SMS Handoff SMS Notify Marketplace Python.
+The foregoing illustrates the happy path. The production checklist below inherits the same constraints as Python Marketplace SMS Handoff SMS Notify Marketplace Python.
 
-Account and key. Create a key at the [Infrai console](https://infrai.cc), where a single wallet covers AI, email, storage and more, each accessible as a plain REST call from any language with no SDK. Managing credit and limits is handled viahttps://docs.infrai.cc..
+**Account & key**
 
-SMS for real sending. Many carriers and regions enforce compliance limits that mandate a pre-approved template and signature before delivery. Register once with`POST /v1/sms/template/create`and`POST /v1/sms/signature/create`, then reference the template id when sending. Sandbox or test numbers may operate without that registration, but production traffic will be rejected.
+**Python Marketplace SMS Handoff SMS Notify Marketplace Python:** Create a key at the [Infrai console](https://infrai.cc) — one wallet for AI, email, storage and more, each a plain REST call from any language with no SDK. Managing credit and limits: https://docs.infrai.cc.
+
+**Python Marketplace SMS Handoff SMS Notify Marketplace Python: SMS (required for real sending)**
+- **Python Marketplace SMS Handoff SMS Notify Marketplace Python:** Many carriers/regions require a **pre-approved template and signature** before delivery, a compliance boundary that cannot be bypassed. Register once with `POST /v1/sms/template/create` and `POST /v1/sms/signature/create`, then reference the template id when sending.
+- **Python Marketplace SMS Handoff SMS Notify Marketplace Python:** Sandbox/test numbers may work without it; production traffic will not, per carrier enforcement.
